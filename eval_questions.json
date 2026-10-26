@@ -1,0 +1,35 @@
+
+[
+  {
+    "question": "What is the rule for grenades?",
+    "ground_truth": "You can use the grenades during your shooting phase. You can choose one grenade unit from your army that is not within Engagement Range of any enemy units and has not been selected to shoot this phase. To attack, select one enemy unit that is not within Engagement Range of any units from your army and is within 8 of and visible to your grenades unit."
+  },
+  {
+    "question": "How can I use a stratagem?",
+    "ground_truth": "To use a Stratagem, you must pay the CP specified. If you do not have enough CP for a specific Stratagem, you cannot use it. The same Stratagem cannot be used more than once in the same phase."
+  },
+  {
+    "question": "What are the different ways to score command points?",
+    "ground_truth": "At the start of your Command phase both players gain 1CP. Outside of the CP players gain at the start of the Command phase, each player can only gain a total of 1 CP per battle round, regardless of the source."
+  },
+  {
+    "question": "What happens when the player's turn ends?",
+    "ground_truth": "Once a player's turn has ended, their opponent then starts their run. Once both players have completed a turn, the battle round has been completed and the next one begins, and so on, until the battle ends."
+  },
+  {
+    "question": "What is a mission?",
+    "ground_truth": "The mission tells you how to muster your armies, create your battlefield and deploy your forces on the tabletop. It also tells you any special rules that apply to the battle and what you need to do to win."
+  },
+  {
+    "question": "What is the difference between friendly and enemy units?",
+    "ground_truth": "The friendly units are all the units from the same army while enemy units are all the units from the opponent's army."
+  },
+  {
+    "question": "What is the engagement range?",
+    "ground_truth": "The engagement represents the zone of threat that models present to their enemies. While a model is within 1 horizontally and 5 vertically of an enemy model, those models –and their units – are within Engagement Range of each other."
+  },
+  {
+    "question": "What happens to the unit when the model is destroyed?",
+    "ground_truth": "When a model is destroyed, it is removed from the battlefield. When every model in a unit has been destroyed, that unit is destroyed."
+  }
+]

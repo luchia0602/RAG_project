@@ -1,34 +1,41 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
+"""This script generates an answer using the Gemini API, given a question and context retrieved from the knowledge base"""
 
-MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
+import os
+from dotenv import load_dotenv
+load_dotenv(override=True)
+from google import genai
+from google.genai import types
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
-    torch_dtype=torch.float16,
-    device_map="auto"
+client = genai.Client(
+    api_key=os.environ["GOOGLE_API_KEY"]
 )
 
+MODEL_NAME = "gemini-3.8-flash"
 
 def generate_answer(question, context):
     prompt = f"""You are a Warhammer rules assistant.
 
-Answer the question using ONLY the information explicitly stated in the provided context.
+Answer the question using ONLY the information explicitly stated
+in the provided context.
 
 STRICT RULES:
 - Do not use your general knowledge of Warhammer.
 - Do not add facts that are not explicitly stated in the context.
 - Do not combine separate rules, abilities, or conditions.
-- Do not infer that one condition causes or grants another condition unless the context explicitly says so.
-- Preserve the exact distinction between "Fights First", "eligible to fight", and "made a Charge move".
+- Do not infer that one condition causes or grants another condition
+  unless the context explicitly says so.
+- Preserve the exact distinction between "Fights First",
+  "eligible to fight", and "made a Charge move".
 - Do not add examples that are not explicitly present in the context.
-- If something is unclear or incomplete in the context, do not guess.
-- If the context does not contain enough information to answer the question, say:
+- If something is unclear or incomplete, do not guess.
+- If the context does not contain enough information to answer,
+  say exactly:
   "I couldn't find enough information in the provided rules."
-
-Give a concise answer based only on the context.
+- Answer the specific question directly.
+- When asked about a phase or procedure, summarize the relevant
+  rules and include the steps explicitly present in the context.
+- Use complete sentences. Do not stop mid-sentence.
+- Be concise, but include all information needed to answer the question.
 
 Context:
 {context}
@@ -39,33 +46,27 @@ Question:
 Answer:
 """
 
-    messages = [
-        {
-            "role": "user",
-            "content": prompt
-        }
-    ]
-
-    text = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.2,
+            max_output_tokens=500
+        )
     )
 
-    inputs = tokenizer(
-        text,
-        return_tensors="pt"
-    ).to(model.device)
+    if not response.candidates: # For empty/incomplete responses
+        return "I couldn't generate an answer. Please try again."
+    candidate = response.candidates[0]
+    finish_reason = candidate.finish_reason
+    print(f"[Gemini finish reason: {finish_reason}]")
 
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=300,
-        temperature=0.2
-    )
+    if response.text is None:
+        return "I couldn't generate an answer. Please try again."
+    answer = response.text.strip()
 
-    generated = outputs[0][inputs["input_ids"].shape[1]:]
-    answer = tokenizer.decode(
-        generated,
-        skip_special_tokens=True
-    )
+    if str(finish_reason) == "MAX_TOKENS" or str(finish_reason).endswith(
+        ".MAX_TOKENS"
+    ):
+        print("[Warning: The answer may have been truncated.]")
     return answer
