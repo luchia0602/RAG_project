@@ -45,7 +45,7 @@ def call_gemini(client, prompt):
     last_error = None
 
     for model in MODELS_TO_TRY:
-     #   print(f"\nTrying Gemini model: {model}")
+        print(f"\nTrying Gemini model: {model}")
 
         for attempt in range(2):
             try:
@@ -59,7 +59,7 @@ def call_gemini(client, prompt):
                         f"Gemini model {model} returned an empty response."
                     )
 
-             #   print(f"Using model: {model}")
+                print(f"Using model: {model}")
                 return response.text
 
             except errors.APIError as exc:
@@ -81,7 +81,7 @@ def call_gemini(client, prompt):
 
             except Exception as exc:
                 last_error = exc
-                #print(f"Unexpected Gemini error: {exc}")
+                print(f"Unexpected Gemini error: {exc}")
                 break
 
     raise RuntimeError(
@@ -166,8 +166,8 @@ SQL QUERY:
     if not raw_sql:
         raise ValueError("Gemini returned an empty SQL query.")
 
-  #  print("\nGenerated SQL:")
-   # print(raw_sql)
+    print("\nGenerated SQL:")
+    print(raw_sql)
 
     return raw_sql
 
@@ -236,7 +236,7 @@ def answer_question(client, reader, question):
         except (TypeError, ValueError):
             row_data = row
 
-    #    print(f"{index}. {row_data}")
+        print(f"{index}. {row_data}")
 
     print(f"\nReturned {len(results)} row(s).")
 
@@ -269,19 +269,19 @@ def main():
 
         reader = SQLiteReader(db_path)
 
-        # TEMPORARY TEST: inspect the cost data
-        rows = reader.execute_readonly_query(
-            """
-            SELECT DatasheetId, line, description, cost,
-                typeof(cost) AS cost_type
-            FROM datasheets_models_cost
-            LIMIT 30
-            """,
-            max_rows=30,
-        )
+        # # TEMPORARY TEST: inspect the cost data
+        # rows = reader.execute_readonly_query(
+        #     """
+        #     SELECT DatasheetId, line, description, cost,
+        #         typeof(cost) AS cost_type
+        #     FROM datasheets_models_cost
+        #     LIMIT 30
+        #     """,
+        #     max_rows=30,
+        # )
 
-        for row in rows:
-            print(dict(row))
+        # # for row in rows:
+        # #     print(dict(row))
 
 
         print("\nDatabase reader initialized.")
