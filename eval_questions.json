@@ -31,5 +31,37 @@
   {
     "question": "What happens to the unit when the model is destroyed?",
     "ground_truth": "When a model is destroyed, it is removed from the battlefield. When every model in a unit has been destroyed, that unit is destroyed."
+  },
+  {
+    "question": "What faction ID is recorded for the Hive Tyrant unit?",
+    "ground_truth": "The Hive Tyrant unit has faction ID TYR."
+  },
+  {
+    "question": "Which units have 'Tyrant' in their name, and what faction ID is recorded for each?",
+    "ground_truth": "The matching units are Hive Tyrant (TYR), Knight Tyrant (QT), Tyrant Guard (TYR), Winged Hive Tyrant (GC), Winged Hive Tyrant (TYR), and Neurotyrant (TYR)."
+  },
+  {
+    "question": "How much damage does the Reaver Titan's Reaver volcano cannon deal?",
+    "ground_truth": "The Reaver volcano cannon deals 14 damage."
+  },
+  {
+    "question": "Which unit uses the Heavy rail cannon array, and how much damage does it deal?",
+    "ground_truth": "The Ta'unar Supremacy Armour uses the Heavy rail cannon array, which deals 16 damage."
+  },
+  {
+    "question": "Which weapon has the highest damage value in the database, and which unit uses it?",
+    "ground_truth": "The Arioch power claw – strike has a damage value of 24 and is used by the Warlord Titan."
+  },
+  {
+    "question": "Which weapons listed for the Warlord Titan are among the five highest-damage weapons in the database, and what damage values do they have?",
+    "ground_truth": "The Belicosa volcano cannon deals 18 damage, and the Arioch power claw – strike deals 24 damage."
+  },
+  {
+    "question": "Which weapons have a Strength value of 13, and which units use them?",
+    "ground_truth": "The Reaver melta cannon has Strength 13 and is used by the Reaver Titan and the Warbringer Nemesis Titan."
+  },
+  {
+    "question": "How many abilities are associated with the Hive Tyrant in the database?",
+    "ground_truth": "The Hive Tyrant has 8 associated ability records."
   }
 ]
