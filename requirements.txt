@@ -1,0 +1,7 @@
+google-genai
+python-dotenv
+numpy
+sentence-transformers
+langchain-text-splitters
+pypdf
+langgraph
