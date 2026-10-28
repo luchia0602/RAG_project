@@ -1,21 +1,50 @@
 """This script retrieves candidate chunks using embeddings, then reranks and filters them"""
 
+import threading
+import time
 import numpy as np
 from sentence_transformers import CrossEncoder
 from embeddings import get_embeddings
+from config import (
+    INITIAL_K,
+    RERANKER_MODEL_NAME,
+    SCORE_MARGIN,
+)
+_reranker = None
+_reranker_lock = threading.Lock()
 
 INITIAL_K = 15 # This many candidates through semantic similarity
 RERANKER_MODEL_NAME = "BAAI/bge-reranker-base" # For reranking
 SCORE_MARGIN = 0.25 # Threshold for filtering reranked results
 _reranker = None
+_reranker_lock = threading.Lock()
+
 
 def get_reranker():
     """Loads the reranker once and reuses it."""
     global _reranker
     if _reranker is None:
-        print(f"Loading reranker: {RERANKER_MODEL_NAME}")
-        _reranker = CrossEncoder(RERANKER_MODEL_NAME)
+        with _reranker_lock:
+            if _reranker is None:
+                print(f"Loading reranker: {RERANKER_MODEL_NAME}")
+                _reranker = CrossEncoder(RERANKER_MODEL_NAME)
     return _reranker
+
+
+def warmup():
+    """
+    Load the embedding model and the reranker now, and run one tiny
+    dummy query through each, so the first real question is not slow.
+    Call this once at program start.
+    """
+    t0 = time.perf_counter()
+    get_embeddings(["warm up"])
+    get_reranker().predict(
+        [("warm up", "warm up")],
+        show_progress_bar=False,
+    )
+    print(f"Retrieval models ready ({time.perf_counter() - t0:.1f}s)")
+
 
 def search(
     question,
@@ -31,6 +60,8 @@ def search(
     3. Filters weak results relative to the highest reranker score;
     4. Returns up to top_k chunks, best first.
     """
+    t_start = time.perf_counter()
+
     embeddings = np.asarray(embeddings)
     question_embedding = get_embeddings([question])[0]
     similarity_scores = embeddings @ question_embedding
@@ -41,8 +72,10 @@ def search(
     candidate_chunks = [
         chunks[int(i)] for i in candidate_indices
     ]
+    t_embed = time.perf_counter()
     print(
-        f"\nInitial retrieval: {len(candidate_chunks)} candidates"
+        f"\nInitial retrieval: {len(candidate_chunks)} candidates "
+        f"({t_embed - t_start:.2f}s)"
     )
     # Reranking
     reranker = get_reranker()
@@ -56,6 +89,7 @@ def search(
             show_progress_bar=False
         )
     ).reshape(-1)
+    print(f"Reranking took {time.perf_counter() - t_embed:.2f}s")
 
     # Sorting candidate positions by reranker score (highest first)
     reranked_positions = np.argsort(rerank_scores)[::-1]
@@ -87,11 +121,10 @@ def search(
         )
         rerank_score = float(rerank_scores[position])
         print(
-            f"Rank: {rank}"
-            f"Semantic similarity: {semantic_score:.4f}"
+            f"Rank: {rank} "
+            f"Semantic similarity: {semantic_score:.4f} "
             f"Reranker score: {rerank_score:.4f}"
         )
-        print(chunk[:500])
+        print(chunk[:50] + "...")
         results.append(chunk)
-
     return results

@@ -1,106 +1,159 @@
-"""This script saves and loads extracted PDF text, chunks, and embeddings so we don't have to recompute it every time"""
+"""Saves and loads extracted PDF text, chunks, and embeddings."""
 
+import hashlib
 import json
 from pathlib import Path
-import numpy as np
-from pdf_reader import read_pdf
-from embeddings import make_chunks, get_embeddings, MODEL_NAME
 
-PROCESSING_VERSION = 3
+import numpy as np
+
+from config import CACHE_DIR, EMBEDDING_MODEL_NAME
+from embeddings import make_chunks, get_embeddings
+from pdf_reader import read_pdf
+
+PROCESSING_VERSION = 4
+EMBEDDING_DIMENSION = 384
+
+
+def get_pdf_hash(pdf_path):
+    """Return a content hash so PDF identity doesn't depend on its path."""
+    digest = hashlib.sha256()
+
+    with open(pdf_path, "rb") as pdf_file:
+        for block in iter(lambda: pdf_file.read(1024 * 1024), b""):
+            digest.update(block)
+
+    return digest.hexdigest()
+
 
 def get_rag_data(
     pdf_path,
-    cache_dir="cache",
+    cache_dir=None,
     chunk_size=800,
     overlap=100,
-    force_rebuild=False
+    force_rebuild=False,
 ):
-    """Loads a valid cache or rebuilds it from the PDF"""
+    """Load a compatible saved cache or rebuild it from the PDF."""
 
-    pdf_path = Path(pdf_path).resolve()
+    pdf_path = Path(pdf_path).expanduser().resolve() if pdf_path else None
+
+    if cache_dir is None:
+        cache_dir = CACHE_DIR
+
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
+
     text_file = cache_dir / "parsed_text.txt"
     chunks_file = cache_dir / "chunks.json"
     embeddings_file = cache_dir / "embeddings.npy"
     metadata_file = cache_dir / "metadata.json"
 
-    if not pdf_path.exists():
-        raise FileNotFoundError(f"PDF not found: {pdf_path}")
-
-    stat = pdf_path.stat()
-    current_metadata = {
-        "pdf_path": str(pdf_path),
-        "pdf_size": stat.st_size,
-        "pdf_modified": stat.st_mtime,
-        "chunk_size": chunk_size,
-        "overlap": overlap,
-        "embedding_model": MODEL_NAME,
-        "processing_version": PROCESSING_VERSION
-    }
     cache_files = [
         text_file,
         chunks_file,
         embeddings_file,
-        metadata_file
+        metadata_file,
     ]
 
-    if not force_rebuild and all(
-        path.exists() for path in cache_files
-    ):
+    pdf_exists = pdf_path is not None and pdf_path.is_file()
+    current_pdf_hash = get_pdf_hash(pdf_path) if pdf_exists else None
+
+    # Try the saved cache first.
+    if not force_rebuild and all(path.is_file() for path in cache_files):
         try:
-            with open(metadata_file, "r", encoding="utf-8") as f:
-                saved_metadata = json.load(f)
-            if saved_metadata == current_metadata:
+            saved_metadata = json.loads(
+                metadata_file.read_text(encoding="utf-8")
+            )
+
+            compatible = (
+                saved_metadata.get("chunk_size") == chunk_size
+                and saved_metadata.get("overlap") == overlap
+                and saved_metadata.get("embedding_model")
+                == EMBEDDING_MODEL_NAME
+                and saved_metadata.get("processing_version")
+                == PROCESSING_VERSION
+            )
+
+            # If a PDF is available, make sure the cache belongs to it.
+            # If no PDF is available, use the saved cache as a snapshot.
+            if pdf_exists:
+                compatible = compatible and (
+                    saved_metadata.get("pdf_sha256") == current_pdf_hash
+                )
+
+            if compatible:
                 text = text_file.read_text(encoding="utf-8")
-                with open(chunks_file, "r", encoding="utf-8") as f:
-                    chunks = json.load(f)
+                chunks = json.loads(
+                    chunks_file.read_text(encoding="utf-8")
+                )
                 embeddings = np.load(embeddings_file)
-                valid_cache = ( # Check if cache is valid
+
+                valid_cache = (
                     isinstance(chunks, list)
                     and len(chunks) > 0
                     and embeddings.ndim == 2
-                    and embeddings.shape[0] == len(chunks)
-                    and embeddings.shape[1] == 384
+                    and embeddings.shape
+                    == (len(chunks), EMBEDDING_DIMENSION)
                 )
+
                 if valid_cache:
-                    print("Loaded saved PDF.")
+                    print("Loaded saved PDF cache.")
                     print("Characters:", len(text))
                     print("Chunks:", len(chunks))
                     print("Embeddings shape:", embeddings.shape)
                     return text, chunks, embeddings
-                print("Rebuilding PDF...")
-            else:
-                print("Rebuilding PDF...")
+
+            print("Cache is incompatible or invalid; rebuilding if possible.")
 
         except (OSError, ValueError, json.JSONDecodeError):
-            print("Cache is invalid or incomplete. Rebuilding...")
+            print("Cache is invalid or incomplete; rebuilding if possible.")
 
     elif force_rebuild:
-        print("Force rebuild")
+        print("Force rebuild requested.")
     else:
-        print("Cache not found")
+        print("Saved cache not found or incomplete.")
 
-    print(f"Reading PDF...")
+    # Rebuilding requires the original PDF.
+    if not pdf_exists:
+        raise FileNotFoundError(
+            f"No usable cache was found in '{cache_dir}', "
+            "and the source PDF is unavailable. "
+            "Provide the PDF or restore the repository's cache files."
+        )
+
+    print("Reading PDF...")
     text = read_pdf(str(pdf_path))
 
     print("Creating chunks...")
     chunks = make_chunks(
         text,
         chunk_size=chunk_size,
-        chunk_overlap=overlap
+        chunk_overlap=overlap,
     )
 
     print("Creating embeddings...")
     embeddings = get_embeddings(chunks)
+
+    metadata = {
+        "pdf_sha256": current_pdf_hash,
+        "chunk_size": chunk_size,
+        "overlap": overlap,
+        "embedding_model": EMBEDDING_MODEL_NAME,
+        "processing_version": PROCESSING_VERSION,
+    }
+
     text_file.write_text(text, encoding="utf-8")
 
-    with open(chunks_file, "w", encoding="utf-8") as f:
-        json.dump(chunks, f, ensure_ascii=False, indent=2)
+    chunks_file.write_text(
+        json.dumps(chunks, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
     np.save(embeddings_file, embeddings)
 
-    with open(metadata_file, "w", encoding="utf-8") as f:
-        json.dump(current_metadata, f, indent=2)
+    metadata_file.write_text(
+        json.dumps(metadata, indent=2),
+        encoding="utf-8",
+    )
 
     print("Cache created successfully.")
     print("Characters:", len(text))

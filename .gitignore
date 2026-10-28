@@ -1,2 +1,3 @@
-ragas_checkpoint.json 
-ragas_results.csv 
+__pycache__/
+*.py[cod]
+.env

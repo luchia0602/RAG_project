@@ -1,9 +1,7 @@
 {
-  "pdf_path": "C:\\Users\\user\\Documents\\Studies\\PS\\RAG\\Core Rules.pdf",
-  "pdf_size": 20700229,
-  "pdf_modified": 1789715989.47304,
+  "pdf_sha256": "4d0e8019cbfddd6f46781d5b4ed31d46fb21eb2d0d10a0f6fabefac0ce054364",
   "chunk_size": 800,
   "overlap": 100,
   "embedding_model": "BAAI/bge-small-en-v1.5",
-  "processing_version": 3
+  "processing_version": 4
 }

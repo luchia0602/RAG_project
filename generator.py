@@ -1,22 +1,43 @@
 """This script generates an answer using the Gemini API, given a question and context retrieved from the knowledge base"""
 
-import os
-from dotenv import load_dotenv
-load_dotenv(override=True)
 from google import genai
 from google.genai import types
+from config import GOOGLE_API_KEY, GENERATION_MODELS
+_client = None
 
-client = genai.Client(
-    api_key=os.environ["GOOGLE_API_KEY"]
-)
+def get_client():
+    """Create the Gemini client only when it is first needed."""
+    global _client
 
-MODEL_NAME = "gemini-3.8-flash"
+    if _client is None:
+        if not GOOGLE_API_KEY or GOOGLE_API_KEY == "your_gemini_api_key_here":
+            raise RuntimeError(
+                "Gemini API key not configured. "
+                "Copy .env.example to .env and set GOOGLE_API_KEY."
+            )
+        _client = genai.Client(
+            api_key=GOOGLE_API_KEY,
+            http_options=types.HttpOptions(
+                timeout=30_000,
+                retry_options=types.HttpRetryOptions(attempts=1),
+            ),
+        )
+    return _client
+
+MAX_OUTPUT_TOKENS = 4096
+THINKING_LEVEL = None # For faster answers
 
 def generate_answer(question, context):
     prompt = f"""You are a Warhammer rules assistant.
 
 Answer the question using ONLY the information explicitly stated
 in the provided context.
+
+The context may contain a RULES section (text from the Core Rules)
+and/or a UNIT DATA section (values from the unit database). Treat
+both as part of the provided context. Unit data values may be used
+together with the rules to answer, but only apply rules that are
+stated in the context.
 
 STRICT RULES:
 - Do not use your general knowledge of Warhammer.
@@ -46,14 +67,36 @@ Question:
 Answer:
 """
 
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0.2,
-            max_output_tokens=500
+    config_kwargs = {
+        "temperature": 0.2,
+        "max_output_tokens": MAX_OUTPUT_TOKENS,
+    }
+    if THINKING_LEVEL:
+        config_kwargs["thinking_config"] = types.ThinkingConfig(
+            thinking_level=THINKING_LEVEL
         )
-    )
+
+    response = None
+    last_error = None
+    client = get_client()
+
+    for model in GENERATION_MODELS:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(**config_kwargs),
+            )
+            print(f"[generator model: {model}]")
+            break
+        except Exception as exc:
+            last_error = exc
+            print(f"[generator] {model} failed: {exc}")
+
+    if response is None:
+        raise RuntimeError(
+            f"All generator models failed. Last error: {last_error}"
+        )
 
     if not response.candidates: # For empty/incomplete responses
         return "I couldn't generate an answer. Please try again."

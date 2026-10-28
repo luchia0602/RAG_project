@@ -5,29 +5,21 @@ import re
 from collections import Counter
 from pypdf import PdfReader
 
-
 def clean_line(line):
     """Normalize whitespace without changing the words in a rule."""
     return re.sub(r"\s+", " ", line).strip()
 
-
 def read_pdf(file):
     """Extract text page by page and remove common layout artifacts."""
-
     reader = PdfReader(file)
-
     pages = []
-
     for page_number, page in enumerate(reader.pages, start=1):
         text = page.extract_text() or ""
-
         # Normalize line endings and remove null characters.
         text = text.replace("\x00", "")
         text = text.replace("\r\n", "\n").replace("\r", "\n")
-
         lines = [clean_line(line) for line in text.split("\n")]
         lines = [line for line in lines if line]
-
         pages.append(lines)
 
         print(
@@ -46,7 +38,6 @@ def read_pdf(file):
         ))
 
     min_repeated_pages = max(3, int(len(pages) * 0.20))
-
     repeated_lines = {
         line
         for line, count in line_counts.items()
@@ -57,18 +48,13 @@ def read_pdf(file):
             or re.fullmatch(r"PAGE\s+\d+", line.upper())
         )
     }
-
     cleaned_pages = []
-
     for lines in pages:
         cleaned_lines = []
-
         for line in lines:
             if line in repeated_lines:
                 continue
-
             cleaned_lines.append(line)
-
         page_text = "\n".join(cleaned_lines).strip()
         cleaned_pages.append(page_text)
 
