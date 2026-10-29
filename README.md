@@ -1,6 +1,8 @@
 
 # Context-Aware RAG Assistant
 
+Liudmila SHLYAKHTINA, Tori BARAL
+
 A retrieval-augmented generation (RAG) system that answers
 questions using information retrieved from a user-provided
 PDF and, where configured, structured database content.
