@@ -18,8 +18,8 @@ def get_client():
         _client = genai.Client(
             api_key=GOOGLE_API_KEY,
             http_options=types.HttpOptions(
-                timeout=30_000,
-                retry_options=types.HttpRetryOptions(attempts=1),
+                timeout=60_000,
+                retry_options=types.HttpRetryOptions(attempts=4),
             ),
         )
     return _client
