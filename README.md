@@ -72,3 +72,11 @@ Answers depend on the information successfully extracted
 and retrieved from the source documents. The system may
 not answer questions when the relevant information is
 missing from the retrieved context.
+
+## Implementation details
+
+Please find a detailed description of all the scripts in this repository below.
+
+    api.py
+    
+This script handles the configuration and retrieval of the Google API key required to access Google's Gemini API. It loads environment variables from a local .env file, keeping sensitive credentials separate from the source code. It ensures that values defined in the .env file take precedence over existing environment variables. This approach avoids hardcoding sensitive credentials in the code and improves portability across environments.
