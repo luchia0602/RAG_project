@@ -77,7 +77,7 @@ missing from the retrieved context.
 
 Please find a detailed description of all the scripts in this repository below.
 
-    api_check.py
+    api_check.py (debugging)
     
 This script handles the configuration and retrieval of the Google API key required to access Google's Gemini API. It loads environment variables from a local .env file, keeping sensitive credentials separate from the source code. It ensures that values defined in the .env file take precedence over existing environment variables. This approach avoids hardcoding sensitive credentials in the code and improves portability across environments.
 
@@ -101,3 +101,30 @@ This script implements an evaluation pipeline for the RAG application using the 
 
 This script handles answer generation using Google's Gemini API, taking the user's question and the context retrieved by the RAG pipeline as input. It uses a carefully designed prompt that restricts the model to information explicitly present in the provided context, prohibits unsupported inferences, and specifies an exact fallback response when insufficient information is available, helping reduce hallucinations. The implementation includes lazy client initialization, configurable model selection with automatic fallback if a model fails, API retries and a 60-second timeout; generation uses a low temperature (0.2) to encourage consistent, focused answers. The output is limited to 4,096 tokens, and the script also checks for empty or truncated responses to handle incomplete generation.
 
+    models_check.py (debugging)
+
+This script retrieves and displays the Gemini models available through the configured Google API key using the google-genai SDK. This was used to verify API access and identify available generation models, helping select compatible models for the RAG application's answer-generation component.
+
+    pdf_reader.py
+
+This script extracts and cleans text from the Warhammer Core Rules PDF using the `pypdf` library, processing the document page by page to preserve its original structure. It normalizes whitespace and line endings, removes null characters, and filters out repeated layout elements such as page numbers and running headers using frequency-based detection across pages. An important implementation choice is preserving page boundaries with form-feed characters, allowing subsequent chunking to distinguish between pages rather than accidentally merging unrelated text across page boundaries.
+
+    rag.py (legacy)
+
+The initial implementation with the PDF reader (not used anymore, replaced by router_graph.py). First, it calculates cosine similarity between the question embedding and precomputed document embeddings to select the 15 most relevant chunks; then, it uses the `BAAI/bge-reranker-base` cross-encoder to reassess and reorder these candidates based on their relevance to the question. A score-margin filter removes weak candidates (those scoring more than 0.25 below the highest reranker score), and up to five relevant chunks are returned as context for answer generation.
+
+    router_graph.py
+
+This script is the main entry point of the application and orchestrates the RAG pipeline using LangGraph. It first uses a Gemini-based router to determine whether a question requires information from the Core Rules PDF, the SQLite unit database, or both; the selected retrieval branches are then executed in parallel when necessary. The retrieved information is combined into a unified context, with PDF content and database results clearly distinguished, before being passed to the Gemini answer generator. An important implementation choice is using a graph-based architecture to separate routing, retrieval, and generation into independent nodes, making the pipeline modular and easier to extend; the script also includes execution-time logging, error handling, and model warm-up to improve reliability and responsiveness.
+
+    sqlite_reader.py
+
+This script provides a secure interface for retrieving structured information from the Warhammer SQLite database. It supports both predefined retrieval methods and dynamically generated SQL queries, using parameterized queries to prevent SQL injection. It enforces read-only database access, combined with SQLite authorization rules that block modification commands, a query execution timeout, and a maximum result limit to protect the database from unsafe or excessively expensive queries. 
+
+    test_rag.py (legacy)
+
+This is an older version of the RAG pipeline. It loads the PDF knowledge base, retrieves relevant chunks using semantic search and reranking, and generates an answer to a single user question. The script handles the full workflow directly, including user input, retrieval, and answer generation. It has since been replaced by router_graph.py, which is the current entry point and uses LangGraph to orchestrate the workflow, including routing questions between the PDF knowledge base and the SQL database.
+
+    text_to_sql.py
+
+This script implements the SQL-based retrieval component of the project, translating natural-language questions about Warhammer 40,000 units into SQLite queries using Gemini. It dynamically retrieves the database schema to guide SQL generation, applies validation checks, and executes queries through the read-only `SQLiteReader`, with a three-second timeout and a maximum of 100 returned rows. The results are then converted into concise natural-language answers by Gemini, using only the retrieved database information.
