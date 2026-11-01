@@ -66,6 +66,8 @@ Place your PDF at the configured path.
 
 Enter your question when prompted.
 
+You may find example questions in eval_questions.json testing both PDF and SQL understanding.
+
 ## Limitations
 
 Answers depend on the information successfully extracted
