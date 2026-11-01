@@ -77,6 +77,27 @@ missing from the retrieved context.
 
 Please find a detailed description of all the scripts in this repository below.
 
-    api.py
+    api_check.py
     
 This script handles the configuration and retrieval of the Google API key required to access Google's Gemini API. It loads environment variables from a local .env file, keeping sensitive credentials separate from the source code. It ensures that values defined in the .env file take precedence over existing environment variables. This approach avoids hardcoding sensitive credentials in the code and improves portability across environments.
+
+    cache.py
+
+This script manages the storage and retrieval of preprocessed PDF data to avoid repeating expensive preprocessing operations every time the RAG pipeline runs. An important implementation choice is storing embeddings in NumPy .npy format and metadata separately in JSON, allowing efficient loading and validation while also making it possible to reuse a previously generated cache even when the original PDF is unavailable.
+
+    config.py
+
+This script centralizes the application's configuration, including file paths, API credentials, model names, and RAG parameters. 
+
+    embeddings.py
+
+This script handles text segmentation and embedding generation for the RAG pipeline. It uses LangChain's `RecursiveCharacterTextSplitter` to divide the extracted PDF text into chunks of 800 characters with 100-character overlaps, prioritizing paragraph and sentence boundaries to preserve contextual coherence. It uses the `BAAI/bge-small-en-v1.5` model to convert each chunk into a 384-dimensional semantic vector, with L2 normalization enabled to facilitate similarity comparisons. Here we use the lazy model loading with a global singleton to ensure the embedding model is loaded only once and reused throughout execution, reducing unnecessary loading time and memory overhead.
+
+    evaluate.py
+
+This script implements an evaluation pipeline for the RAG application using the RAGAS framework with four dimensions: faithfulness, answer relevancy, context precision, and context recall. It uses a small sample of questions with predefined ground-truth answers, runs them through the retrieval and generation pipeline, and evaluates the resulting answers using Gemini as the evaluator LLM and Google's embedding model. Due to API token and quota limitations, we were unable to complete the full evaluation reliably; however, we implemented the evaluation pipeline and attempted to run it on a small sample of three questions.
+
+    generator.py
+
+This script handles answer generation using Google's Gemini API, taking the user's question and the context retrieved by the RAG pipeline as input. It uses a carefully designed prompt that restricts the model to information explicitly present in the provided context, prohibits unsupported inferences, and specifies an exact fallback response when insufficient information is available, helping reduce hallucinations. The implementation includes lazy client initialization, configurable model selection with automatic fallback if a model fails, API retries and a 60-second timeout; generation uses a low temperature (0.2) to encourage consistent, focused answers. The output is limited to 4,096 tokens, and the script also checks for empty or truncated responses to handle incomplete generation.
+
