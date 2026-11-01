@@ -2,62 +2,77 @@
 [
   {
     "question": "What is the rule for grenades?",
-    "ground_truth": "You can use the grenades during your shooting phase. You can choose one grenade unit from your army that is not within Engagement Range of any enemy units and has not been selected to shoot this phase. To attack, select one enemy unit that is not within Engagement Range of any units from your army and is within 8 of and visible to your grenades unit."
+    "ground_truth": "You can use the grenades during your shooting phase. You can choose one grenade unit from your army that is not within Engagement Range of any enemy units and has not been selected to shoot this phase. To attack, select one enemy unit that is not within Engagement Range of any units from your army and is within 8 of and visible to your grenades unit.",
+    "answer": "The Grenade rule is a Core Wargear Stratagem used in your Shooting phase. * **Target:** One Grenades unit from your army that is not within Engagement Range of any enemy units and has not been selected to shoot this phase. * **Effect:** Select one enemy unit that is not within Engagement Range of any units from your army and is within 8'' of and visible to your Grenades unit. Roll six D6: for each 4+, that enemy unit suffers 1 mortal wound."
   },
   {
     "question": "How can I use a stratagem?",
-    "ground_truth": "To use a Stratagem, you must pay the CP specified. If you do not have enough CP for a specific Stratagem, you cannot use it. The same Stratagem cannot be used more than once in the same phase."
+    "ground_truth": "To use a Stratagem, you must pay the CP specified. If you do not have enough CP for a specific Stratagem, you cannot use it. The same Stratagem cannot be used more than once in the same phase.",
+    "answer": "To use a Stratagem, you must spend Command points (CP) during the battle and pay the specified amount of CP listed on that Stratagem, reducing your CP total accordingly. You must follow these rules when using Stratagems: * You cannot use a specific Stratagem if you do not have enough CP for it. * You can use the same Stratagem multiple times during a battle. * You cannot use the same Stratagem more than once in the same phase."
   },
   {
     "question": "What are the different ways to score command points?",
-    "ground_truth": "At the start of your Command phase both players gain 1CP. Outside of the CP players gain at the start of the Command phase, each player can only gain a total of 1 CP per battle round, regardless of the source."
+    "ground_truth": "At the start of your Command phase both players gain 1CP. Outside of the CP players gain at the start of the Command phase, each player can only gain a total of 1 CP per battle round, regardless of the source.",
+    "answer": "Based on the provided context, players gain Command points (CP) in the following ways: * Both players gain 1 CP at the start of the Command phase. * Players can gain CP from other sources, though outside of the CP gained at the start of the Command phase, a player can only gain a total of 1 CP per battle round regardless of the source."
   },
   {
     "question": "What happens when the player's turn ends?",
-    "ground_truth": "Once a player's turn has ended, their opponent then starts their run. Once both players have completed a turn, the battle round has been completed and the next one begins, and so on, until the battle ends."
+    "ground_truth": "Once a player's turn has ended, their opponent then starts their run. Once both players have completed a turn, the battle round has been completed and the next one begins, and so on, until the battle ends.",
+    "answer": "When a player's turn ends, their opponent (or the next player) starts their turn, unless the battle ends. Once both players have completed a turn, the battle round has been completed and the next battle round begins."
   },
   {
     "question": "What is a mission?",
-    "ground_truth": "The mission tells you how to muster your armies, create your battlefield and deploy your forces on the tabletop. It also tells you any special rules that apply to the battle and what you need to do to win."
+    "ground_truth": "The mission tells you how to master your armies, create your battlefield and deploy your forces on the tabletop. It also tells you any special rules that apply to the battle and what you need to do to win.",
+    "answer": "Based on the provided rules, a mission tells you how to muster your armies, create your battlefield, and deploy your forces on the tabletop. It also tells you any special rules that apply to the battle and what you need to do to win."
   },
   {
     "question": "What is the difference between friendly and enemy units?",
-    "ground_truth": "The friendly units are all the units from the same army while enemy units are all the units from the opponent's army."
+    "ground_truth": "The friendly units are all the units from the same army while enemy units are all the units from the opponent's army.",
+    "answer": "Friendly units are all units from the same army, while enemy units are all units from your opponent's army."
   },
   {
     "question": "What is the engagement range?",
-    "ground_truth": "The engagement represents the zone of threat that models present to their enemies. While a model is within 1 horizontally and 5 vertically of an enemy model, those models –and their units – are within Engagement Range of each other."
+    "ground_truth": "The engagement represents the zone of threat that models present to their enemies. While a model is within 1 horizontally and 5 vertically of an enemy model, those models –and their units – are within Engagement Range of each other.",
+    "answer": "Engagement Range represents the zone of threat that models present to their enemies. Models and their units are within Engagement Range of each other while a model is within 1'' horizontally and 5'' vertically of an enemy model."
   },
   {
     "question": "What happens to the unit when the model is destroyed?",
-    "ground_truth": "When a model is destroyed, it is removed from the battlefield. When every model in a unit has been destroyed, that unit is destroyed."
+    "ground_truth": "When a model is destroyed, it is removed from the battlefield. When every model in a unit has been destroyed, that unit is destroyed.",
+    "answer": "Based on the provided context, when a model is destroyed, it is removed from the battlefield (or removed from play). When every model in a unit has been destroyed, that unit is destroyed."
   },
   {
     "question": "What faction ID is recorded for the Hive Tyrant unit?",
-    "ground_truth": "The Hive Tyrant unit has faction ID TYR."
+    "ground_truth": "The Hive Tyrant unit has faction ID TYR.",
+    "answer": "The faction ID recorded for the Hive Tyrant unit is TYR."
   },
   {
     "question": "Which units have 'Tyrant' in their name, and what faction ID is recorded for each?",
-    "ground_truth": "The matching units are Hive Tyrant (TYR), Knight Tyrant (QT), Tyrant Guard (TYR), Winged Hive Tyrant (GC), Winged Hive Tyrant (TYR), and Neurotyrant (TYR)."
+    "ground_truth": "The matching units are Hive Tyrant (TYR), Knight Tyrant (QT), Tyrant Guard (TYR), Winged Hive Tyrant (GC), Winged Hive Tyrant (TYR), and Neurotyrant (TYR).",
+    "answer": "Based on the provided context, the units with 'Tyrant' in their name and their recorded faction IDs are: - **Winged Hive Tyrant**: Faction ID `GC` - **Knight Tyrant**: Faction ID `QT` - **Hive Tyrant**: Faction ID `TYR` - **Tyrant Guard**: Faction ID `TYR` - **Winged Hive Tyrant**: Faction ID `TYR` - **Neurotyrant**: Faction ID `TYR`"
   },
   {
     "question": "How much damage does the Reaver Titan's Reaver volcano cannon deal?",
-    "ground_truth": "The Reaver volcano cannon deals 14 damage."
+    "ground_truth": "The Reaver volcano cannon deals 14 damage.",
+    "answer": "The Reaver Titan's Reaver volcano cannon deals 14 damage."
   },
   {
     "question": "Which unit uses the Heavy rail cannon array, and how much damage does it deal?",
-    "ground_truth": "The Ta'unar Supremacy Armour uses the Heavy rail cannon array, which deals 16 damage."
+    "ground_truth": "The Ta'unar Supremacy Armour uses the Heavy rail cannon array, which deals 16 damage.",
+    "answer": "The Ta'unar Supremacy Armour unit uses the Heavy rail cannon array, and it deals 16 damage."
   },
   {
     "question": "Which weapon has the highest damage value in the database, and which unit uses it?",
-    "ground_truth": "The Arioch power claw – strike has a damage value of 24 and is used by the Warlord Titan."
+    "ground_truth": "The Arioch power claw – strike has a damage value of 24 and is used by the Warlord Titan.",
+    "answer": "The weapon with the highest damage value in the database is the Arioch power claw – strike (with a damage value of 24), and it is used by the Warlord Titan."
   },
   {
     "question": "Which weapons have a Strength value of 13, and which units use them?",
-    "ground_truth": "The Reaver melta cannon has Strength 13 and is used by the Reaver Titan and the Warbringer Nemesis Titan."
+    "ground_truth": "The Reaver melta cannon has Strength 13 and is used by the Reaver Titan and the Warbringer Nemesis Titan.",
+    "answer": "The weapon with a Strength value of 13 is the Reaver melta cannon found on the Reaver Titan and Warbringer Nemesis Titan."
   },
   {
     "question": "How many abilities are associated with the Hive Tyrant in the database?",
-    "ground_truth": "The Hive Tyrant has 6 associated ability records."
+    "ground_truth": "The Hive Tyrant has 6 associated ability records.",
+    "answer": "There are 6 abilities associated with the Hive Tyrant in the database."
   }
 ]
