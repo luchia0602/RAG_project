@@ -1,9 +1,17 @@
-"""This script generates an answer using the Gemini API, given a question and context retrieved from the knowledge base"""
+
+"""Generate an answer using Gemini and the context retrieved by the RAG pipeline."""
 
 from google import genai
 from google.genai import types
+
 from config import GOOGLE_API_KEY, GENERATION_MODELS
+
 _client = None
+
+MAX_OUTPUT_TOKENS = 4096
+THINKING_LEVEL = None
+DEBUG_CONTEXT = False # Change to True if you want to see what context is sent to the generator
+
 
 def get_client():
     """Create the Gemini client only when it is first needed."""
@@ -15,101 +23,135 @@ def get_client():
                 "Gemini API key not configured. "
                 "Copy .env.example to .env and set GOOGLE_API_KEY."
             )
+
         _client = genai.Client(
             api_key=GOOGLE_API_KEY,
             http_options=types.HttpOptions(
                 timeout=60_000,
-                retry_options=types.HttpRetryOptions(attempts=4),
+                retry_options=types.HttpRetryOptions(attempts=1),
             ),
         )
+
     return _client
 
-MAX_OUTPUT_TOKENS = 4096
-THINKING_LEVEL = None # For faster answers
 
-def generate_answer(question, context):
-    prompt = f"""You are a Warhammer rules assistant.
+def build_prompt(question, context):
+    """Build a prompt using the retrieved information."""
 
-Answer the question using ONLY the information explicitly stated
-in the provided context.
+    return f"""
+You are a precise assistant answering questions about Warhammer 40,000.
 
-The context may contain a RULES section (text from the Core Rules)
-and/or a UNIT DATA section (values from the unit database). Treat
-both as part of the provided context. Unit data values may be used
-together with the rules to answer, but only apply rules that are
-stated in the context.
+Your task is to answer the user's question using ONLY the supplied context.
 
-STRICT RULES:
-- Do not use your general knowledge of Warhammer.
-- Do not add facts that are not explicitly stated in the context.
-- Do not combine separate rules, abilities, or conditions.
-- Do not infer that one condition causes or grants another condition
-  unless the context explicitly says so.
-- Preserve the exact distinction between "Fights First",
-  "eligible to fight", and "made a Charge move".
-- Do not add examples that are not explicitly present in the context.
-- If something is unclear or incomplete, do not guess.
-- If the context does not contain enough information to answer,
+The context can contain information from two sources:
+
+1. RULES: Text extracted from the Warhammer Core Rules PDF.
+2. UNIT DATA: Structured information retrieved from the Warhammer database.
+
+HOW TO USE THE CONTEXT:
+- Use RULES to answer questions about game mechanics and procedures.
+- Use UNIT DATA to answer questions about units, weapons, characteristics,
+  abilities, factions, and other database information.
+- You may combine information from RULES and UNIT DATA when both sources
+  explicitly provide the information needed for the answer.
+- You may combine multiple relevant passages from the same source.
+- Do not invent missing information or rely on your general knowledge.
+- Do not treat information from one source as evidence for something
+  that it does not explicitly establish.
+
+IMPORTANT:
+- Distinguish carefully between "Fights First", "eligible to fight",
+  and "made a Charge move".
+- Do not confuse a unit's characteristics with rules governing those
+  characteristics.
+- If the context contains the answer, provide it directly.
+- Do not reject an answer merely because the relevant information
+  appears in several separate passages.
+- If the context genuinely does not contain enough information,
   say exactly:
   "I couldn't find enough information in the provided rules."
-- Answer the specific question directly.
-- When asked about a phase or procedure, summarize the relevant
-  rules and include the steps explicitly present in the context.
-- Use complete sentences. Do not stop mid-sentence.
-- Be concise, but include all information needed to answer the question.
 
-Context:
+RESPONSE FORMAT:
+- Answer the specific question directly.
+- Use complete sentences.
+- Include relevant names, values, and units.
+- Explain the relevant steps when asked about a procedure.
+- Be concise but sufficiently detailed.
+- Do not mention SQL, retrieval, or the internal implementation.
+
+CONTEXT:
 {context}
 
-Question:
+QUESTION:
 {question}
 
-Answer:
-"""
+ANSWER:
+""".strip()
+
+def generate_answer(question, context):
+    """Generate an answer based on retrieved context."""
+
+    if not context or not context.strip():
+        print("[generator] Empty context received.")
+        return "I couldn't find enough information in the provided rules."
+
+    print(f"[generator] Context length: {len(context)} characters")
+
+    if DEBUG_CONTEXT:
+        print("CONTEXT RECEIVED BY GENERATOR:")
+        print(context)
+
+    prompt = build_prompt(question, context)
 
     config_kwargs = {
-        "temperature": 0.2,
+        "temperature": 0.1,
         "max_output_tokens": MAX_OUTPUT_TOKENS,
     }
+
     if THINKING_LEVEL:
         config_kwargs["thinking_config"] = types.ThinkingConfig(
             thinking_level=THINKING_LEVEL
         )
 
-    response = None
-    last_error = None
     client = get_client()
+    last_error = None
 
     for model in GENERATION_MODELS:
         try:
+            print(f"[generator] Trying model: {model}")
+
             response = client.models.generate_content(
                 model=model,
                 contents=prompt,
                 config=types.GenerateContentConfig(**config_kwargs),
             )
+
+            if not response.candidates:
+                print(f"[generator] {model} returned no candidates.")
+                continue
+
+            candidate = response.candidates[0]
+            finish_reason = candidate.finish_reason
+
             print(f"[generator model: {model}]")
-            break
+            print(f"[Gemini finish reason: {finish_reason}]")
+
+            if response.text is None:
+                print(f"[generator] {model} returned no text.")
+                continue
+
+            answer = response.text.strip()
+
+            if not answer:
+                print(f"[generator] {model} returned an empty answer.")
+                continue
+
+            return answer
+
         except Exception as exc:
             last_error = exc
             print(f"[generator] {model} failed: {exc}")
 
-    if response is None:
-        raise RuntimeError(
-            f"All generator models failed. Last error: {last_error}"
-        )
-
-    if not response.candidates: # For empty/incomplete responses
-        return "I couldn't generate an answer. Please try again."
-    candidate = response.candidates[0]
-    finish_reason = candidate.finish_reason
-    print(f"[Gemini finish reason: {finish_reason}]")
-
-    if response.text is None:
-        return "I couldn't generate an answer. Please try again."
-    answer = response.text.strip()
-
-    if str(finish_reason) == "MAX_TOKENS" or str(finish_reason).endswith(
-        ".MAX_TOKENS"
-    ):
-        print("[Warning: The answer may have been truncated.]")
-    return answer
+    raise RuntimeError(
+        f"All generator models failed. Last error: {last_error}"
+    )
