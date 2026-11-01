@@ -5,7 +5,7 @@ Liudmila SHLYAKHTINA, Tori BARAL
 
 A retrieval-augmented generation (RAG) system that answers
 questions using information retrieved from a user-provided
-PDF and, where configured, structured database content.
+PDF and structured database content.
 
 ## Features
 
@@ -13,18 +13,27 @@ PDF and, where configured, structured database content.
 - Recursive text chunking with configurable overlap
 - Semantic retrieval using sentence embeddings
 - Cross-encoder reranking
+- Structured data retrieval from a local SQLite database
+- Natural-language-to-SQL query generation using Gemini
+- Dynamic database schema inspection and SQL validation
+- Read-only SQL execution with query timeouts and result limits
+- Combined retrieval from PDF rules and structured unit data
 - Context-grounded answer generation using the Gemini API
 - Configurable models and retrieval parameters
 - Local caching of processed documents and embeddings
 
-## How It Works
+## How it works
 
-1. Extract text from the PDF.
+1. Extract and clean text from the PDF.
 2. Split the text into overlapping chunks.
 3. Generate and cache normalized embeddings.
 4. Retrieve candidate chunks using semantic similarity.
 5. Rerank the candidates using a cross-encoder.
-6. Generate an answer using the retrieved context.
+6. Use a Gemini-powered rerouter within a LangGraph workflow to analyze the user's question and decide whether to retrieve information from the PDF, the SQLite database, or both.
+7. For database queries, inspect the schema and use Gemini to translate the natural-language question into SQL.
+8. Validate and execute the generated SQL using read-only database access.
+9. Combine the retrieved PDF passages and structured database results into a single context.
+10. Generate a context-grounded answer using Gemini.
 
 ## Requirements
 
@@ -34,9 +43,7 @@ PDF and, where configured, structured database content.
 
 ## Installation
 
-Clone the repository and enter its directory.
-
-Create and activate a virtual environment:
+Clone the repository and enter its directory. Create and activate a virtual environment:
 
     py -m venv .venv
     .\.venv\Scripts\Activate.ps1
@@ -65,6 +72,8 @@ Place your PDF at the configured path.
     python router_graph.py
 
 Enter your question when prompted.
+
+Type `exit` to stop.
 
 You may find example questions in eval_questions.json testing both PDF and SQL understanding.
 
@@ -129,4 +138,4 @@ This is an older version of the RAG pipeline. It loads the PDF knowledge base, r
 
     text_to_sql.py
 
-This script implements the SQL-based retrieval component of the project, translating natural-language questions about Warhammer 40,000 units into SQLite queries using Gemini. It dynamically retrieves the database schema to guide SQL generation, applies validation checks, and executes queries through the read-only `SQLiteReader`, with a three-second timeout and a maximum of 100 returned rows. The results are then converted into concise natural-language answers by Gemini, using only the retrieved database information.
+This script implements the SQL-based retrieval component of the project, translating natural-language questions about Warhammer 40,000 units into SQLite queries using Gemini. It dynamically retrieves the database schema to guide SQL generation, applies validation checks, and executes queries through the read-only SQLiteReader, with a three-second timeout and a maximum of 100 returned rows. The results are then converted into concise natural-language answers by Gemini, using only the retrieved database information.
