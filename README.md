@@ -93,7 +93,7 @@ This script centralizes the application's configuration, including file paths, A
 
     embeddings.py
 
-This script handles text segmentation and embedding generation for the RAG pipeline. It uses LangChain's `RecursiveCharacterTextSplitter` to divide the extracted PDF text into chunks of 800 characters with 100-character overlaps, prioritizing paragraph and sentence boundaries to preserve contextual coherence. It uses the `BAAI/bge-small-en-v1.5` model to convert each chunk into a 384-dimensional semantic vector, with L2 normalization enabled to facilitate similarity comparisons. Here we use the lazy model loading with a global singleton to ensure the embedding model is loaded only once and reused throughout execution, reducing unnecessary loading time and memory overhead.
+This script handles text segmentation and embedding generation for the RAG pipeline. It uses LangChain's RecursiveCharacterTextSplitter to divide the extracted PDF text into chunks of 800 characters with 100-character overlaps, prioritizing paragraph and sentence boundaries to preserve contextual coherence. It uses the BAAI/bge-small-en-v1.5 model to convert each chunk into a 384-dimensional semantic vector, with L2 normalization enabled to facilitate similarity comparisons. Here we use the lazy model loading with a global singleton to ensure the embedding model is loaded only once and reused throughout execution, reducing unnecessary loading time and memory overhead.
 
     evaluate.py
 
@@ -109,11 +109,11 @@ This script retrieves and displays the Gemini models available through the confi
 
     pdf_reader.py
 
-This script extracts and cleans text from the Warhammer Core Rules PDF using the `pypdf` library, processing the document page by page to preserve its original structure. It normalizes whitespace and line endings, removes null characters, and filters out repeated layout elements such as page numbers and running headers using frequency-based detection across pages. An important implementation choice is preserving page boundaries with form-feed characters, allowing subsequent chunking to distinguish between pages rather than accidentally merging unrelated text across page boundaries.
+This script extracts and cleans text from the Warhammer Core Rules PDF using the pypdf library, processing the document page by page to preserve its original structure. It normalizes whitespace and line endings, removes null characters, and filters out repeated layout elements such as page numbers and running headers using frequency-based detection across pages. An important implementation choice is preserving page boundaries with form-feed characters, allowing subsequent chunking to distinguish between pages rather than accidentally merging unrelated text across page boundaries.
 
     rag.py (legacy)
 
-The initial implementation with the PDF reader (not used anymore, replaced by router_graph.py). First, it calculates cosine similarity between the question embedding and precomputed document embeddings to select the 15 most relevant chunks; then, it uses the `BAAI/bge-reranker-base` cross-encoder to reassess and reorder these candidates based on their relevance to the question. A score-margin filter removes weak candidates (those scoring more than 0.25 below the highest reranker score), and up to five relevant chunks are returned as context for answer generation.
+The initial implementation with the PDF reader (not used anymore, replaced by router_graph.py). First, it calculates cosine similarity between the question embedding and precomputed document embeddings to select the 15 most relevant chunks; then, it uses the BAAI/bge-reranker-base cross-encoder to reassess and reorder these candidates based on their relevance to the question. A score-margin filter removes weak candidates (those scoring more than 0.25 below the highest reranker score), and up to five relevant chunks are returned as context for answer generation.
 
     router_graph.py
 
